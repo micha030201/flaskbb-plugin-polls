@@ -1,0 +1,26 @@
+<form method="post">
+    <input type="hidden" name="csrf_token" value="{{ csrf_token() }}"/>
+    {% for option in poll.options %}
+        <div>
+            <input
+                type="checkbox"
+                name="options-selected" value="{{ option.id }}"
+                {% if current_user in poll.users_voted or not poll.allowed_to_vote(current_user) %}disabled{% endif %}
+                {% if current_user in option.users_voted %}checked{% endif %}
+            />
+            {{ option.text }}
+        </div>
+        <div class="progress">
+            <div class="progress-bar" style="min-width: 2em; width: {{ option.users_voted|length / (poll.users_voted|length or 1) * 100 }}%;">
+                {{ option.users_voted|length }}
+            </div>
+        </div>
+    {% endfor %}
+    {% if poll.allowed_to_vote(current_user) %}
+        {% if current_user not in poll.users_voted %}
+            <button formaction="{{ url_for("polls.vote", id=poll.id) }}" type="submit" class="btn btn-default">Vote</button>
+        {% else %}
+            <button formaction="{{ url_for("polls.withdraw_vote", id=poll.id) }}" type="submit" class="btn btn-default">Withdraw vote</button>
+        {% endif %}
+    {% endif %}
+</form>
