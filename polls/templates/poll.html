@@ -1,26 +1,76 @@
-<form method="post">
+<div class="panel panel-default">
+<form method="post" class="panel-body">
     <input type="hidden" name="csrf_token" value="{{ csrf_token() }}"/>
+    {% set already_voted = current_user in poll.users_voted %}
+    {% set allowed_to_vote = poll.allowed_to_vote(current_user) %}
+    {% set results_visible = poll.allowed_to_see_result(current_user) %}
+
+    <small style="text-align: right;">
+        <div>{{ poll.users_voted|length }} users have voted</div>
+        <div>Votes can{% if not poll.changing_votes_allowed %}not{% endif %} be changed</div>
+        {% if poll.max_votes_allowed > 1 and poll.max_votes_allowed < poll.options|length %}
+            <div>You can select {{ poll.max_votes_allowed }} options or fewer</div>
+        {% endif %}
+        {% if poll.votes_public %}
+            <div>Votes are publicly visible</div>
+        {% endif %}
+        {% if not results_visible %}
+            {% if not poll.result_visible_before_closed %}
+                <div>You will be able to see the result once the poll closes</div>
+            {% elif not poll.result_visible_before_voting %}
+                <div>You will be able to see the result once you vote</div>
+            {% endif %}
+        {% endif %}
+        {% if poll.closes %}
+            {% if poll.has_already_closed %}
+                <div>This poll closed {{ poll.closes|format_date('%d %B %Y - %H:%M') }}</div>
+            {% else %}
+                <div>This poll will close {{ poll.closes|format_date('%d %B %Y - %H:%M') }}</div>
+            {% endif %}
+        {% endif %}
+    </small>
+
     {% for option in poll.options %}
-        <div>
-            <input
-                type="checkbox"
-                name="options-selected" value="{{ option.id }}"
-                {% if current_user in poll.users_voted or not poll.allowed_to_vote(current_user) %}disabled{% endif %}
-                {% if current_user in option.users_voted %}checked{% endif %}
-            />
-            {{ option.text }}
-        </div>
-        <div class="progress">
-            <div class="progress-bar" style="min-width: 2em; width: {{ option.users_voted|length / (poll.users_voted|length or 1) * 100 }}%;">
-                {{ option.users_voted|length }}
+        <p>
+            <label class="checkbox-inline">
+                <input
+                    type="{{ 'checkbox' if poll.max_votes_allowed > 1 else 'radio' }}"
+                    name="options-selected" value="{{ option.id }}"
+                    {% if already_voted or not allowed_to_vote %}disabled{% endif %}
+                    {% if current_user in option.users_voted %}checked{% endif %}
+                />
+                {{ option.text }}
+            </label>
+        </p>
+        {% if results_visible %}
+            {% if poll.votes_public %}
+                <a data-toggle="collapse" href="#users-voting-for-option{{ option.id }}-in-poll-{{ poll.id }}">
+            {% endif %}
+            <div class="progress">
+                <div class="progress-bar" style="min-width: 2em; width: {{ option.users_voted|length / (poll.users_voted|length or 1) * 100 }}%;">
+                    {{ option.users_voted|length }}
+                </div>
             </div>
-        </div>
+            {% if poll.votes_public %}
+                </a>
+                <div class="collapse" id="users-voting-for-option{{ option.id }}-in-poll-{{ poll.id }}">
+                    <div class="well">
+                        {% for user in option.users_voted %}
+                            <div>
+                                <a href="{{ user.url }}">{{ user.username }}</a>
+                            </div>
+                        {% endfor %}
+                    </div>
+                </div>
+            {% endif %}
+        {% endif %}
     {% endfor %}
-    {% if poll.allowed_to_vote(current_user) %}
-        {% if current_user not in poll.users_voted %}
+    {% if allowed_to_vote %}
+        {% if not already_voted %}
             <button formaction="{{ url_for("polls.vote", id=poll.id) }}" type="submit" class="btn btn-default">Vote</button>
-        {% else %}
+        {% elif poll.changing_votes_allowed %}
             <button formaction="{{ url_for("polls.withdraw_vote", id=poll.id) }}" type="submit" class="btn btn-default">Withdraw vote</button>
         {% endif %}
     {% endif %}
 </form>
+</div>

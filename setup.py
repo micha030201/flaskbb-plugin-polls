@@ -44,6 +44,7 @@ setup(
         ]
     },
     install_requires=[
+        "pytimeparse",
         "FlaskBB"
     ],
     setup_requires=[
