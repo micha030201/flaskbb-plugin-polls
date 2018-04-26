@@ -129,7 +129,7 @@ def withdraw_vote(id):
 
 # Poll rendering:
 
-_re_poll = re.compile(r'\[poll=(\d)\]')
+_re_poll = re.compile(r'\[poll=(\d+)\]')
 
 
 def render_poll(match):
