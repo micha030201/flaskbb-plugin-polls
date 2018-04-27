@@ -1,5 +1,9 @@
+<style>
+    /* reset some styles in quoted posts - i'm sure it looks nice on normal text, but not in the poll boxes */
+    .poll-form small::before { content: ""; }
+</style>
 <div class="panel panel-default">
-<form method="post" class="panel-body">
+<form method="post" class="panel-body poll-form">
     <input type="hidden" name="csrf_token" value="{{ csrf_token() }}"/>
     {% set already_voted = current_user in poll.users_voted %}
     {% set allowed_to_vote = poll.allowed_to_vote(current_user) %}
@@ -32,7 +36,7 @@
 
     {% for option in poll.options %}
         <p>
-            <label class="checkbox-inline">
+            <label>
                 <input
                     type="{{ 'checkbox' if poll.max_votes_allowed > 1 else 'radio' }}"
                     name="options-selected" value="{{ option.id }}"
