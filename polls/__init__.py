@@ -21,7 +21,7 @@ from .models import Poll, Option
 from .utils import text_to_bool, text_to_datetime
 
 
-__version__ = "0.1.0"
+__version__ = "0.1.1"
 
 
 # connect the hooks
