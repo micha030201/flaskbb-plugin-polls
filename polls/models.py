@@ -31,7 +31,8 @@ class Poll(db.Model, CRUDMixin):
     max_votes_allowed = db.Column(db.Integer, default=999, nullable=False)
     closes = db.Column(UTCDateTime(timezone=True), nullable=True)
 
-    options = db.relationship("Option", back_populates="poll", lazy="joined")
+    options = db.relationship("Option", back_populates="poll",
+                              lazy="joined", order_by="Option.id")
 
     @property
     def users_voted(self):
